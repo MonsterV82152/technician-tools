@@ -695,11 +695,11 @@
     </header>
 
     <nav>
-        <button class="nav-btn active" data-page="dashboard">Dashboard</button>
-        <button class="nav-btn" data-page="match">Match Checklist</button>
-        <button class="nav-btn" data-page="robot">Robot Inspection</button>
-        <button class="nav-btn" data-page="batteries">Batteries</button>
-        <button class="nav-btn" data-page="settings">Settings</button>
+        <button class="nav-btn active" data-page="dashboard">Dashboard (Alt+1)</button>
+        <button class="nav-btn" data-page="match">Match Checklist (Alt+2)</button>
+        <button class="nav-btn" data-page="robot">Robot Inspection (Alt+3)</button>
+        <button class="nav-btn" data-page="batteries">Batteries (Alt+4)</button>
+        <button class="nav-btn" data-page="settings">Settings (Alt+5)</button>
     </nav>
 
     <div class="container">
@@ -732,7 +732,7 @@
                 <div class="match-info">
                     <div>
                         <label>Match Type</label>
-                        <select id="dashMatchType">
+                        <select id="dashMatchType" onchange="syncDashMatchInfo()">
                             <option value="practice">Practice</option>
                             <option value="qual">Qualification</option>
                             <option value="playoff">Playoff</option>
@@ -740,7 +740,7 @@
                     </div>
                     <div>
                         <label>Match Number</label>
-                        <input type="number" id="dashMatchNumber" min="1" value="1">
+                        <input type="number" id="dashMatchNumber" min="1" value="1" onchange="syncDashMatchInfo()">
                     </div>
                     <div>
                         <label>Scheduled Battery</label>
@@ -779,7 +779,9 @@
         <div class="page" id="match">
             <div class="card">
                 <h2>
-                    Match Preparation
+                    Match Preparation <span
+                        style="font-size: 0.6em; color: var(--text-muted); font-weight: normal; margin-left: 10px;">(Press
+                        'C' to check next item)</span>
                     <button class="btn btn-danger btn-small reset-match-btn" onclick="resetMatchChecklist()">Reset
                         All</button>
                 </h2>
@@ -847,7 +849,9 @@
         <div class="page" id="robot">
             <div class="card">
                 <h2>
-                    Physical Robot Checklist
+                    Physical Robot Checklist <span
+                        style="font-size: 0.6em; color: var(--text-muted); font-weight: normal; margin-left: 10px;">(Press
+                        'C' to check next item)</span>
                     <div>
                         <button class="btn btn-small" onclick="toggleEditMode('robot')">✏️ Edit</button>
                         <button class="btn btn-warning btn-small" onclick="resetRobotChecklist()">Reset Checks</button>
@@ -886,8 +890,16 @@
 
                 <div class="match-info" style="margin-bottom: 15px;">
                     <div>
-                        <label>Expected Total Matches</label>
+                        <label>Practice Matches</label>
+                        <input type="number" id="practiceMatches" min="0" value="3" onchange="updateScheduleConfig()">
+                    </div>
+                    <div>
+                        <label>Qual Matches</label>
                         <input type="number" id="totalMatches" min="1" value="12" onchange="updateScheduleConfig()">
+                    </div>
+                    <div>
+                        <label>Playoff Matches</label>
+                        <input type="number" id="playoffMatches" min="0" value="10" onchange="updateScheduleConfig()">
                     </div>
                     <div>
                         <label>Backup Battery</label>
@@ -983,31 +995,33 @@
     <div class="modal" id="batteryModal">
         <div class="modal-content">
             <h2 id="batteryModalTitle">Add Battery</h2>
-            <div class="form-group">
-                <label>Battery Name/ID</label>
-                <input type="text" id="batteryName" placeholder="e.g., Battery 1, B-2024-01">
-            </div>
-            <div class="form-group">
-                <label>Status</label>
-                <select id="batteryStatus">
-                    <option value="ready">Ready (Charged)</option>
-                    <option value="charging">Charging</option>
-                    <option value="in-use">In Use</option>
-                    <option value="low">Low/Needs Charge</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label>Last Voltage (V)</label>
-                <input type="number" id="batteryVoltage" step="0.01" placeholder="12.80">
-            </div>
-            <div class="form-group">
-                <label>Notes</label>
-                <textarea id="batteryNotes" placeholder="Any notes about this battery..."></textarea>
-            </div>
-            <div class="modal-actions">
-                <button class="btn btn-danger" onclick="closeBatteryModal()">Cancel</button>
-                <button class="btn btn-success" onclick="saveBattery()">Save</button>
-            </div>
+            <form onsubmit="event.preventDefault(); saveBattery();">
+                <div class="form-group">
+                    <label>Battery Name/ID</label>
+                    <input type="text" id="batteryName" placeholder="e.g., Battery 1, B-2024-01" required>
+                </div>
+                <div class="form-group">
+                    <label>Status</label>
+                    <select id="batteryStatus">
+                        <option value="ready">Ready (Charged)</option>
+                        <option value="charging">Charging</option>
+                        <option value="in-use">In Use</option>
+                        <option value="low">Low/Needs Charge</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Last Voltage (V)</label>
+                    <input type="number" id="batteryVoltage" step="0.01" placeholder="12.80">
+                </div>
+                <div class="form-group">
+                    <label>Notes</label>
+                    <textarea id="batteryNotes" placeholder="Any notes about this battery..."></textarea>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-danger" onclick="closeBatteryModal()">Cancel</button>
+                    <button type="submit" class="btn btn-success">Save</button>
+                </div>
+            </form>
         </div>
     </div>
 
@@ -1015,22 +1029,24 @@
     <div class="modal" id="issueModal">
         <div class="modal-content">
             <h2>Report Issue</h2>
-            <div class="form-group">
-                <label>Issue Description</label>
-                <textarea id="issueDescription" placeholder="Describe the issue..."></textarea>
-            </div>
-            <div class="form-group">
-                <label>Severity</label>
-                <select id="issueSeverity">
-                    <option value="low">Low - Can continue</option>
-                    <option value="medium">Medium - Monitor closely</option>
-                    <option value="high">High - Needs immediate attention</option>
-                </select>
-            </div>
-            <div class="modal-actions">
-                <button class="btn btn-danger" onclick="closeIssueModal()">Cancel</button>
-                <button class="btn btn-success" onclick="saveIssue()">Save Issue</button>
-            </div>
+            <form onsubmit="event.preventDefault(); saveIssue();">
+                <div class="form-group">
+                    <label>Issue Description</label>
+                    <textarea id="issueDescription" placeholder="Describe the issue..." required></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Severity</label>
+                    <select id="issueSeverity">
+                        <option value="low">Low - Can continue</option>
+                        <option value="medium">Medium - Monitor closely</option>
+                        <option value="high">High - Needs immediate attention</option>
+                    </select>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-danger" onclick="closeIssueModal()">Cancel</button>
+                    <button type="submit" class="btn btn-success">Save Issue</button>
+                </div>
+            </form>
         </div>
     </div>
 
@@ -1040,14 +1056,16 @@
             <h2>Swap Battery for Match</h2>
             <p style="color: var(--text-muted); margin-bottom: 15px;">Select a different battery for this match. This
                 will update the schedule.</p>
-            <div class="form-group">
-                <label>New Battery</label>
-                <select id="swapBatterySelect"></select>
-            </div>
-            <div class="modal-actions">
-                <button class="btn btn-danger" onclick="closeSwapModal()">Cancel</button>
-                <button class="btn btn-success" onclick="confirmSwap()">Confirm Swap</button>
-            </div>
+            <form onsubmit="event.preventDefault(); confirmSwap();">
+                <div class="form-group">
+                    <label>New Battery</label>
+                    <select id="swapBatterySelect"></select>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-danger" onclick="closeSwapModal()">Cancel</button>
+                    <button type="submit" class="btn btn-success">Confirm Swap</button>
+                </div>
+            </form>
         </div>
     </div>
 
@@ -1055,14 +1073,16 @@
     <div class="modal" id="editScheduleModal">
         <div class="modal-content">
             <h2>Edit Match <span id="editMatchNum"></span> Battery</h2>
-            <div class="form-group">
-                <label>Battery</label>
-                <select id="editScheduleBattery"></select>
-            </div>
-            <div class="modal-actions">
-                <button class="btn btn-danger" onclick="closeEditScheduleModal()">Cancel</button>
-                <button class="btn btn-success" onclick="saveScheduleEdit()">Save</button>
-            </div>
+            <form onsubmit="event.preventDefault(); saveScheduleEdit();">
+                <div class="form-group">
+                    <label>Battery</label>
+                    <select id="editScheduleBattery"></select>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-danger" onclick="closeEditScheduleModal()">Cancel</button>
+                    <button type="submit" class="btn btn-success">Save</button>
+                </div>
+            </form>
         </div>
     </div>
 
@@ -1134,7 +1154,9 @@
                 batteryCycles: 0
             },
             scheduleConfig: {
+                practiceMatches: 3,
                 totalMatches: 12,
+                playoffMatches: 10,
                 backupBatteryId: null
             },
             batterySchedule: [] // Array of { matchNumber, batteryId, completed, actualBatteryId }
@@ -1156,6 +1178,7 @@
             updateDashboard();
             updateScheduledBatteryDisplay();
             syncMatchInfo();
+            updateMatchNumberConstraints();
 
             // Bind team number input
             document.getElementById('teamNumber').addEventListener('change', (e) => {
@@ -1197,6 +1220,34 @@
                     const page = btn.dataset.page;
                     showPage(page);
                 });
+            });
+
+            // Keyboard shortcuts for navigation
+            document.addEventListener('keydown', (e) => {
+                // Don't trigger if user is typing in an input or textarea
+                if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') {
+                    return;
+                }
+
+                // Alt + Number keys for navigation
+                if (e.altKey) {
+                    switch (e.key) {
+                        case '1': showPage('dashboard'); break;
+                        case '2': showPage('match'); break;
+                        case '3': showPage('robot'); break;
+                        case '4': showPage('batteries'); break;
+                        case '5': showPage('settings'); break;
+                    }
+                } else if (e.key === 'c' || e.key === 'C') {
+                    // Shortcut to check the next unchecked item on the active page
+                    const activePage = document.querySelector('.page.active');
+                    if (activePage) {
+                        const firstUnchecked = activePage.querySelector('input[type="checkbox"]:not(:checked)');
+                        if (firstUnchecked) {
+                            firstUnchecked.click();
+                        }
+                    }
+                }
             });
         }
 
@@ -1292,9 +1343,19 @@
             appData.checklists[checklistKey].items[index].checked =
                 !appData.checklists[checklistKey].items[index].checked;
             saveData();
+
+            // Remember focused element to restore it after re-rendering
+            const activeId = document.activeElement ? document.activeElement.id : null;
+
             renderAllChecklists();
             updateAllProgress();
             updateDashboard();
+
+            // Restore focus
+            if (activeId) {
+                const el = document.getElementById(activeId);
+                if (el) el.focus();
+            }
         }
 
         function toggleIssue(checklistKey, index) {
@@ -1354,6 +1415,7 @@
                 input.value = '';
                 saveData();
                 renderAllChecklists();
+                updateAllProgress();
             }
         }
 
@@ -1364,6 +1426,7 @@
                 [items[index], items[newIndex]] = [items[newIndex], items[index]];
                 saveData();
                 renderAllChecklists();
+                updateAllProgress();
             }
         }
 
@@ -1372,6 +1435,7 @@
                 appData.checklists[checklistKey].items.splice(index, 1);
                 saveData();
                 renderAllChecklists();
+                updateAllProgress();
             }
         }
 
@@ -1386,6 +1450,7 @@
                 document.getElementById('newRobotItem').value = '';
                 saveData();
                 renderAllChecklists();
+                updateAllProgress();
             }
         }
 
@@ -1478,7 +1543,8 @@
         function updateDashboardBattery() {
             const display = document.getElementById('dashScheduledBattery');
             const currentMatchNum = appData.currentMatch?.number || 1;
-            const scheduleEntry = appData.batterySchedule?.find(s => s.matchNumber === currentMatchNum);
+            const currentMatchType = appData.currentMatch?.type || 'practice';
+            const scheduleEntry = appData.batterySchedule?.find(s => s.matchNumber === currentMatchNum && s.type === currentMatchType);
 
             if (scheduleEntry) {
                 const battery = appData.batteries.find(b => b.id === (scheduleEntry.actualBatteryId || scheduleEntry.batteryId));
@@ -1512,6 +1578,33 @@
         }
 
         // ============ MATCH MANAGEMENT ============
+        function updateMatchNumberConstraints() {
+            const type = document.getElementById('matchType').value;
+            const matchNumberInput = document.getElementById('matchNumber');
+            const dashMatchNumberInput = document.getElementById('dashMatchNumber');
+
+            let maxMatches = 100; // Default fallback
+            if (type === 'practice') {
+                maxMatches = appData.scheduleConfig?.practiceMatches ?? 3;
+            } else if (type === 'qual') {
+                maxMatches = appData.scheduleConfig?.totalMatches || 12;
+            } else if (type === 'playoff') {
+                maxMatches = appData.scheduleConfig?.playoffMatches ?? 10;
+            }
+
+            maxMatches = Math.max(1, maxMatches); // Ensure at least 1 to prevent invalid input state
+
+            matchNumberInput.max = maxMatches;
+            dashMatchNumberInput.max = maxMatches;
+
+            // Ensure current value is within bounds
+            if (parseInt(matchNumberInput.value) > maxMatches) {
+                matchNumberInput.value = maxMatches;
+                dashMatchNumberInput.value = maxMatches;
+                syncMatchInfo();
+            }
+        }
+
         function syncMatchInfo() {
             const type = document.getElementById('matchType').value;
             const number = document.getElementById('matchNumber').value;
@@ -1521,9 +1614,21 @@
             document.getElementById('dashMatchType').value = type;
             document.getElementById('dashMatchNumber').value = number;
 
+            updateMatchNumberConstraints();
             updateScheduledBatteryDisplay();
+            updateDashboardBattery();
             renderBatterySchedule();
             saveData();
+        }
+
+        function syncDashMatchInfo() {
+            const type = document.getElementById('dashMatchType').value;
+            const number = document.getElementById('dashMatchNumber').value;
+
+            document.getElementById('matchType').value = type;
+            document.getElementById('matchNumber').value = number;
+
+            syncMatchInfo();
         }
 
         function resetMatchChecklist() {
@@ -1553,9 +1658,10 @@
 
         function completeMatch() {
             const currentMatchNum = appData.currentMatch.number;
+            const currentMatchType = appData.currentMatch.type;
 
             // Get scheduled battery for this match
-            const scheduleEntry = appData.batterySchedule.find(s => s.matchNumber === currentMatchNum);
+            const scheduleEntry = appData.batterySchedule.find(s => s.matchNumber === currentMatchNum && s.type === currentMatchType);
             const batteryId = scheduleEntry ? (scheduleEntry.actualBatteryId || scheduleEntry.batteryId) : null;
 
             // Record match
@@ -1594,6 +1700,7 @@
             appData.currentMatch.number++;
             document.getElementById('matchNumber').value = appData.currentMatch.number;
             document.getElementById('dashMatchNumber').value = appData.currentMatch.number;
+            syncMatchInfo();
 
             // Reset checklists
             ['field', 'driver', 'robotTest'].forEach(key => {
@@ -1611,6 +1718,11 @@
             updateDashboard();
             updateScheduledBatteryDisplay();
 
+            // Force progress bars to update visually
+            updateProgressBar('fieldProgress', 'fieldBadge', 0);
+            updateProgressBar('driverProgress', 'driverBadge', 0);
+            updateProgressBar('robotTestProgress', 'robotTestBadge', 0);
+
             alert('Match recorded! Checklists reset for next match.');
         }
 
@@ -1627,7 +1739,9 @@
                 ).join('');
 
             // Update total matches input
+            document.getElementById('practiceMatches').value = appData.scheduleConfig?.practiceMatches ?? 3;
             document.getElementById('totalMatches').value = appData.scheduleConfig?.totalMatches || 12;
+            document.getElementById('playoffMatches').value = appData.scheduleConfig?.playoffMatches ?? 10;
 
             // All batteries grid
             if (appData.batteries.length === 0) {
@@ -1651,7 +1765,6 @@
                 </div>
             `).join('');
 
-            updateBatteryDropdown();
             renderBatteryHistory();
         }
 
@@ -1772,15 +1885,20 @@
         // ============ BATTERY SCHEDULE ============
         function updateScheduleConfig() {
             appData.scheduleConfig = {
+                practiceMatches: parseInt(document.getElementById('practiceMatches').value) || 0,
                 totalMatches: parseInt(document.getElementById('totalMatches').value) || 12,
+                playoffMatches: parseInt(document.getElementById('playoffMatches').value) || 0,
                 backupBatteryId: document.getElementById('backupBattery').value || null
             };
             saveData();
             renderBatteries();
+            updateMatchNumberConstraints();
         }
 
         function generateSchedule() {
+            const numPracticeMatches = appData.scheduleConfig?.practiceMatches ?? 3;
             const totalMatches = appData.scheduleConfig?.totalMatches || 12;
+            const numPlayoffMatches = appData.scheduleConfig?.playoffMatches ?? 10;
             const backupId = appData.scheduleConfig?.backupBatteryId;
 
             // Get rotation batteries (all except backup)
@@ -1798,21 +1916,50 @@
 
             // Generate schedule cycling through rotation batteries
             appData.batterySchedule = [];
-            for (let i = 1; i <= totalMatches; i++) {
+
+            // Add practice matches
+            for (let i = 1; i <= numPracticeMatches; i++) {
                 const batteryIndex = (i - 1) % rotationBatteries.length;
-                const wasCompleted = appData.batterySchedule.find(s => s.matchNumber === i)?.completed || false;
+                const wasCompleted = appData.batterySchedule.find(s => s.matchNumber === i && s.type === 'practice')?.completed || false;
                 appData.batterySchedule.push({
+                    type: 'practice',
                     matchNumber: i,
                     batteryId: rotationBatteries[batteryIndex].id,
                     completed: wasCompleted,
-                    actualBatteryId: null // Used when swapped
+                    actualBatteryId: null
+                });
+            }
+
+            // Add qualification matches
+            for (let i = 1; i <= totalMatches; i++) {
+                const batteryIndex = (i - 1 + numPracticeMatches) % rotationBatteries.length;
+                const wasCompleted = appData.batterySchedule.find(s => s.matchNumber === i && s.type === 'qual')?.completed || false;
+                appData.batterySchedule.push({
+                    type: 'qual',
+                    matchNumber: i,
+                    batteryId: rotationBatteries[batteryIndex].id,
+                    completed: wasCompleted,
+                    actualBatteryId: null
+                });
+            }
+
+            // Add playoff matches
+            for (let i = 1; i <= numPlayoffMatches; i++) {
+                const batteryIndex = (i - 1 + numPracticeMatches + totalMatches) % rotationBatteries.length;
+                const wasCompleted = appData.batterySchedule.find(s => s.matchNumber === i && s.type === 'playoff')?.completed || false;
+                appData.batterySchedule.push({
+                    type: 'playoff',
+                    matchNumber: i,
+                    batteryId: rotationBatteries[batteryIndex].id,
+                    completed: wasCompleted,
+                    actualBatteryId: null
                 });
             }
 
             saveData();
             renderBatterySchedule();
             updateScheduledBatteryDisplay();
-            alert(`Schedule generated for ${totalMatches} matches using ${rotationBatteries.length} batteries in rotation.`);
+            alert(`Schedule generated for ${numPracticeMatches} Practice, ${totalMatches} Quals, and ${numPlayoffMatches} Playoff matches using ${rotationBatteries.length} batteries in rotation.`);
         }
 
         function clearSchedule() {
@@ -1840,6 +1987,7 @@
             badge.className = 'badge ' + (completedCount === appData.batterySchedule.length ? 'badge-success' : 'badge-warning');
 
             const currentMatchNum = appData.currentMatch?.number || 1;
+            const currentMatchType = appData.currentMatch?.type || 'practice';
             const backupBattery = appData.batteries.find(b => b.id === appData.scheduleConfig?.backupBatteryId);
 
             let html = '';
@@ -1856,18 +2004,20 @@
             appData.batterySchedule.forEach(entry => {
                 const battery = appData.batteries.find(b => b.id === (entry.actualBatteryId || entry.batteryId));
                 const originalBattery = entry.actualBatteryId ? appData.batteries.find(b => b.id === entry.batteryId) : null;
-                const isCurrent = entry.matchNumber === currentMatchNum;
+                const isCurrent = entry.matchNumber === currentMatchNum && entry.type === currentMatchType;
                 const rowClass = entry.completed ? 'completed' : (isCurrent ? 'current-match' : '');
 
+                const matchTypeDisplay = entry.type === 'practice' ? 'Prac' : (entry.type === 'qual' ? 'Qual' : 'Playoff');
+
                 html += `<tr class="${rowClass}">
-                    <td>Match ${entry.matchNumber}${isCurrent ? ' (Current)' : ''}</td>
+                    <td>${matchTypeDisplay} ${entry.matchNumber}${isCurrent ? ' (Current)' : ''}</td>
                     <td>
                         ${battery?.name || 'Unknown'}
                         ${originalBattery ? `<span style="color: var(--text-muted); font-size: 0.8rem;"> (was: ${originalBattery.name})</span>` : ''}
                     </td>
                     <td>${entry.completed ? '✓ Completed' : 'Pending'}</td>
                     <td>
-                        ${!entry.completed ? `<button class="btn btn-small" onclick="openEditScheduleModal(${entry.matchNumber})">Edit</button>` : '-'}
+                        ${!entry.completed ? `<button class="btn btn-small" onclick="openEditScheduleModal('${entry.type}', ${entry.matchNumber})">Edit</button>` : '-'}
                     </td>
                 </tr>`;
             });
@@ -1883,7 +2033,8 @@
             const backupNameSpan = document.getElementById('backupBatteryName');
 
             const currentMatchNum = appData.currentMatch?.number || 1;
-            const scheduleEntry = appData.batterySchedule?.find(s => s.matchNumber === currentMatchNum);
+            const currentMatchType = appData.currentMatch?.type || 'practice';
+            const scheduleEntry = appData.batterySchedule?.find(s => s.matchNumber === currentMatchNum && s.type === currentMatchType);
 
             if (scheduleEntry) {
                 const battery = appData.batteries.find(b => b.id === (scheduleEntry.actualBatteryId || scheduleEntry.batteryId));
@@ -1907,7 +2058,8 @@
         function openSwapModal() {
             const select = document.getElementById('swapBatterySelect');
             const currentMatchNum = appData.currentMatch?.number || 1;
-            const scheduleEntry = appData.batterySchedule?.find(s => s.matchNumber === currentMatchNum);
+            const currentMatchType = appData.currentMatch?.type || 'practice';
+            const scheduleEntry = appData.batterySchedule?.find(s => s.matchNumber === currentMatchNum && s.type === currentMatchType);
             const currentBatteryId = scheduleEntry ? (scheduleEntry.actualBatteryId || scheduleEntry.batteryId) : null;
 
             // Show all batteries except backup (unless using backup for swap)
@@ -1925,7 +2077,8 @@
         function confirmSwap() {
             const newBatteryId = document.getElementById('swapBatterySelect').value;
             const currentMatchNum = appData.currentMatch?.number || 1;
-            const scheduleEntry = appData.batterySchedule?.find(s => s.matchNumber === currentMatchNum);
+            const currentMatchType = appData.currentMatch?.type || 'practice';
+            const scheduleEntry = appData.batterySchedule?.find(s => s.matchNumber === currentMatchNum && s.type === currentMatchType);
 
             if (scheduleEntry && newBatteryId) {
                 scheduleEntry.actualBatteryId = newBatteryId;
@@ -1937,12 +2090,15 @@
         }
 
         // Edit schedule modal functions
-        function openEditScheduleModal(matchNum) {
+        let editingScheduleMatchType = null;
+        function openEditScheduleModal(matchType, matchNum) {
             editingScheduleMatch = matchNum;
-            document.getElementById('editMatchNum').textContent = matchNum;
+            editingScheduleMatchType = matchType;
+            const matchTypeDisplay = matchType === 'practice' ? 'Prac' : (matchType === 'qual' ? 'Qual' : 'Playoff');
+            document.getElementById('editMatchNum').textContent = `${matchTypeDisplay} ${matchNum}`;
 
             const select = document.getElementById('editScheduleBattery');
-            const scheduleEntry = appData.batterySchedule?.find(s => s.matchNumber === matchNum);
+            const scheduleEntry = appData.batterySchedule?.find(s => s.matchNumber === matchNum && s.type === matchType);
             const currentBatteryId = scheduleEntry ? (scheduleEntry.actualBatteryId || scheduleEntry.batteryId) : null;
 
             select.innerHTML = appData.batteries
@@ -1956,11 +2112,12 @@
         function closeEditScheduleModal() {
             document.getElementById('editScheduleModal').classList.remove('active');
             editingScheduleMatch = null;
+            editingScheduleMatchType = null;
         }
 
         function saveScheduleEdit() {
             const newBatteryId = document.getElementById('editScheduleBattery').value;
-            const scheduleEntry = appData.batterySchedule?.find(s => s.matchNumber === editingScheduleMatch);
+            const scheduleEntry = appData.batterySchedule?.find(s => s.matchNumber === editingScheduleMatch && s.type === editingScheduleMatchType);
 
             if (scheduleEntry && newBatteryId) {
                 scheduleEntry.actualBatteryId = newBatteryId;
