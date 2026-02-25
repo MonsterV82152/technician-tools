@@ -1,0 +1,2042 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FRC Technician Dashboard</title>
+    <style>
+        :root {
+            --primary: #0066cc;
+            --primary-dark: #004d99;
+            --success: #28a745;
+            --warning: #ffc107;
+            --danger: #dc3545;
+            --bg: #1a1a2e;
+            --bg-card: #16213e;
+            --bg-input: #0f3460;
+            --text: #eaeaea;
+            --text-muted: #a0a0a0;
+            --border: #333;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            line-height: 1.5;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            background: var(--bg-card);
+            padding: 15px 20px;
+            border-bottom: 2px solid var(--primary);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        header h1 {
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .team-input {
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 8px 12px;
+            border-radius: 5px;
+            width: 150px;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        nav {
+            background: var(--bg-card);
+            padding: 10px;
+            display: flex;
+            gap: 5px;
+            flex-wrap: wrap;
+            justify-content: center;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .nav-btn {
+            background: transparent;
+            border: 2px solid var(--border);
+            color: var(--text);
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.9rem;
+        }
+
+        .nav-btn:hover {
+            border-color: var(--primary);
+            background: rgba(0, 102, 204, 0.1);
+        }
+
+        .nav-btn.active {
+            background: var(--primary);
+            border-color: var(--primary);
+        }
+
+        .btn {
+            background: var(--primary);
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.2s;
+            font-size: 0.9rem;
+        }
+
+        .btn:hover {
+            background: var(--primary-dark);
+        }
+
+        .btn-success {
+            background: var(--success);
+        }
+
+        .btn-success:hover {
+            background: #218838;
+        }
+
+        .btn-warning {
+            background: var(--warning);
+            color: #000;
+        }
+
+        .btn-warning:hover {
+            background: #e0a800;
+        }
+
+        .btn-danger {
+            background: var(--danger);
+        }
+
+        .btn-danger:hover {
+            background: #c82333;
+        }
+
+        .btn-small {
+            padding: 5px 10px;
+            font-size: 0.8rem;
+        }
+
+        .page {
+            display: none;
+            padding: 20px 0;
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        .card {
+            background: var(--bg-card);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid var(--border);
+        }
+
+        .card h2 {
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .card h3 {
+            margin: 15px 0 10px;
+            color: var(--primary);
+        }
+
+        .checklist-item {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            margin: 5px 0;
+            background: var(--bg-input);
+            border-radius: 5px;
+            gap: 10px;
+        }
+
+        .checklist-item.checked {
+            background: rgba(40, 167, 69, 0.2);
+        }
+
+        .checklist-item.issue {
+            background: rgba(220, 53, 69, 0.2);
+        }
+
+        .checklist-item input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+
+        .checklist-item label {
+            flex: 1;
+            cursor: pointer;
+        }
+
+        .checklist-item .item-actions {
+            display: flex;
+            gap: 5px;
+        }
+
+        .checklist-item .issue-btn {
+            background: var(--danger);
+            border: none;
+            color: white;
+            padding: 3px 8px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 0.75rem;
+        }
+
+        .checklist-item .issue-btn.flagged {
+            background: var(--warning);
+            color: #000;
+        }
+
+        .progress-bar {
+            background: var(--bg-input);
+            border-radius: 10px;
+            height: 25px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary), var(--success));
+            transition: width 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+
+        .match-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .match-info label {
+            display: block;
+            margin-bottom: 5px;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .match-info input,
+        .match-info select {
+            width: 100%;
+            padding: 10px;
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            color: var(--text);
+            border-radius: 5px;
+            font-size: 1rem;
+        }
+
+        .battery-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .battery-card {
+            background: var(--bg-input);
+            border-radius: 8px;
+            padding: 15px;
+            border-left: 4px solid var(--primary);
+        }
+
+        .battery-card.in-use {
+            border-left-color: var(--success);
+            background: rgba(40, 167, 69, 0.1);
+        }
+
+        .battery-card.charging {
+            border-left-color: var(--warning);
+        }
+
+        .battery-card.low {
+            border-left-color: var(--danger);
+        }
+
+        .battery-card h4 {
+            margin-bottom: 10px;
+        }
+
+        .battery-card p {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin: 3px 0;
+        }
+
+        .battery-card .status {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 3px;
+            font-size: 0.75rem;
+            margin-top: 5px;
+        }
+
+        .status-ready {
+            background: var(--success);
+        }
+
+        .status-charging {
+            background: var(--warning);
+            color: #000;
+        }
+
+        .status-in-use {
+            background: var(--primary);
+        }
+
+        .status-low {
+            background: var(--danger);
+        }
+
+        .edit-mode .checklist-item {
+            padding-right: 5px;
+        }
+
+        .edit-controls {
+            display: flex;
+            gap: 5px;
+        }
+
+        .edit-controls button {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            padding: 5px;
+            font-size: 1rem;
+        }
+
+        .edit-controls button:hover {
+            color: var(--text);
+        }
+
+        .add-item-form {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .add-item-form input {
+            flex: 1;
+            padding: 10px;
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            color: var(--text);
+            border-radius: 5px;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--bg-card);
+            padding: 25px;
+            border-radius: 10px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-content h2 {
+            margin-bottom: 20px;
+        }
+
+        .modal-content .form-group {
+            margin-bottom: 15px;
+        }
+
+        .modal-content label {
+            display: block;
+            margin-bottom: 5px;
+            color: var(--text-muted);
+        }
+
+        .modal-content input,
+        .modal-content select,
+        .modal-content textarea {
+            width: 100%;
+            padding: 10px;
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            color: var(--text);
+            border-radius: 5px;
+        }
+
+        .modal-content textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 20px;
+        }
+
+        .issues-list {
+            margin-top: 15px;
+        }
+
+        .issue-item {
+            background: rgba(220, 53, 69, 0.2);
+            padding: 10px;
+            border-radius: 5px;
+            margin: 5px 0;
+            border-left: 3px solid var(--danger);
+        }
+
+        .issue-item.resolved {
+            background: rgba(40, 167, 69, 0.1);
+            border-left-color: var(--success);
+        }
+
+        .issue-item h4 {
+            font-size: 0.9rem;
+        }
+
+        .issue-item p {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .stat-card {
+            background: var(--bg-input);
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .stat-card .value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--primary);
+        }
+
+        .stat-card .label {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        .history-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        .history-table th,
+        .history-table td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .history-table th {
+            background: var(--bg-input);
+            font-weight: 600;
+        }
+
+        .history-table tr:hover {
+            background: rgba(0, 102, 204, 0.1);
+        }
+
+        .quick-status {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+
+        .quick-status-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        .status-dot.green {
+            background: var(--success);
+        }
+
+        .status-dot.yellow {
+            background: var(--warning);
+        }
+
+        .status-dot.red {
+            background: var(--danger);
+        }
+
+        @media (max-width: 600px) {
+            header {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            nav {
+                padding: 5px;
+            }
+
+            .nav-btn {
+                padding: 8px 12px;
+                font-size: 0.8rem;
+            }
+
+            .container {
+                padding: 10px;
+            }
+
+            .card {
+                padding: 15px;
+            }
+        }
+
+        .section-divider {
+            border-top: 2px solid var(--primary);
+            margin: 20px 0;
+            padding-top: 15px;
+        }
+
+        .reset-match-btn {
+            background: var(--danger);
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 0.75rem;
+            margin-left: 10px;
+        }
+
+        .badge-success {
+            background: var(--success);
+        }
+
+        .badge-warning {
+            background: var(--warning);
+            color: #000;
+        }
+
+        .badge-danger {
+            background: var(--danger);
+        }
+
+        .scheduled-battery-card {
+            background: linear-gradient(135deg, rgba(0, 102, 204, 0.2), rgba(40, 167, 69, 0.2));
+            border: 2px solid var(--primary);
+            border-radius: 10px;
+            padding: 15px;
+            margin: 15px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .scheduled-battery-main {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .scheduled-label {
+            color: var(--text-muted);
+        }
+
+        .scheduled-battery-name {
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: var(--success);
+        }
+
+        .backup-battery-card {
+            background: rgba(255, 193, 7, 0.1);
+            border: 1px solid var(--warning);
+            border-radius: 5px;
+            padding: 10px;
+            margin-bottom: 15px;
+            font-size: 0.9rem;
+        }
+
+        .backup-battery-card span:last-child {
+            font-weight: bold;
+            color: var(--warning);
+        }
+
+        .schedule-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .schedule-table th,
+        .schedule-table td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .schedule-table th {
+            background: var(--bg-input);
+        }
+
+        .schedule-table tr.current-match {
+            background: rgba(0, 102, 204, 0.2);
+            border-left: 3px solid var(--primary);
+        }
+
+        .schedule-table tr.completed {
+            opacity: 0.6;
+        }
+
+        .schedule-table tr.completed td:first-child::after {
+            content: ' ✓';
+            color: var(--success);
+        }
+
+        .backup-badge {
+            background: var(--warning);
+            color: #000;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 0.7rem;
+            margin-left: 5px;
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <h1>🤖 FRC Technician Dashboard</h1>
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <label style="color: var(--text-muted); font-size: 0.85rem;">Team:</label>
+            <input type="text" class="team-input" id="teamNumber" placeholder="Team #" maxlength="5">
+        </div>
+        <div class="header-actions">
+            <button class="btn btn-small" onclick="exportData()">📤 Export</button>
+            <button class="btn btn-small" onclick="document.getElementById('importFile').click()">📥 Import</button>
+            <input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(event)">
+        </div>
+    </header>
+
+    <nav>
+        <button class="nav-btn active" data-page="dashboard">Dashboard</button>
+        <button class="nav-btn" data-page="match">Match Checklist</button>
+        <button class="nav-btn" data-page="robot">Robot Inspection</button>
+        <button class="nav-btn" data-page="batteries">Batteries</button>
+        <button class="nav-btn" data-page="settings">Settings</button>
+    </nav>
+
+    <div class="container">
+        <!-- Dashboard Page -->
+        <div class="page active" id="dashboard">
+            <div class="card">
+                <h2>Quick Status</h2>
+                <div class="quick-status">
+                    <div class="quick-status-item">
+                        <span class="status-dot" id="fieldStatusDot"></span>
+                        <span>Field Setup</span>
+                    </div>
+                    <div class="quick-status-item">
+                        <span class="status-dot" id="driverStatusDot"></span>
+                        <span>Driver Station</span>
+                    </div>
+                    <div class="quick-status-item">
+                        <span class="status-dot" id="robotStatusDot"></span>
+                        <span>Robot Test</span>
+                    </div>
+                    <div class="quick-status-item">
+                        <span class="status-dot" id="batteryStatusDot"></span>
+                        <span>Battery Ready</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>Current Match</h2>
+                <div class="match-info">
+                    <div>
+                        <label>Match Type</label>
+                        <select id="dashMatchType">
+                            <option value="practice">Practice</option>
+                            <option value="qual">Qualification</option>
+                            <option value="playoff">Playoff</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label>Match Number</label>
+                        <input type="number" id="dashMatchNumber" min="1" value="1">
+                    </div>
+                    <div>
+                        <label>Scheduled Battery</label>
+                        <div id="dashScheduledBattery"
+                            style="padding: 10px; background: var(--bg-input); border-radius: 5px; font-weight: bold;">
+                            --</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>Statistics</h2>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="value" id="matchesCompleted">0</div>
+                        <div class="label">Matches Completed</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="value" id="issuesResolved">0</div>
+                        <div class="label">Issues Resolved</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="value" id="batteryCycles">0</div>
+                        <div class="label">Battery Cycles</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card" id="activeIssuesCard" style="display:none;">
+                <h2>⚠️ Active Issues</h2>
+                <div class="issues-list" id="activeIssuesList"></div>
+            </div>
+        </div>
+
+        <!-- Match Checklist Page -->
+        <div class="page" id="match">
+            <div class="card">
+                <h2>
+                    Match Preparation
+                    <button class="btn btn-danger btn-small reset-match-btn" onclick="resetMatchChecklist()">Reset
+                        All</button>
+                </h2>
+
+                <div class="match-info">
+                    <div>
+                        <label>Match Type</label>
+                        <select id="matchType" onchange="syncMatchInfo()">
+                            <option value="practice">Practice</option>
+                            <option value="qual">Qualification</option>
+                            <option value="playoff">Playoff</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label>Match Number</label>
+                        <input type="number" id="matchNumber" min="1" value="1" onchange="syncMatchInfo()">
+                    </div>
+                </div>
+
+                <div id="scheduledBatteryInfo" class="scheduled-battery-card" style="display: none;">
+                    <div class="scheduled-battery-main">
+                        <span class="scheduled-label">🔋 Scheduled Battery for this Match:</span>
+                        <span class="scheduled-battery-name" id="scheduledBatteryName">--</span>
+                    </div>
+                    <div class="scheduled-battery-actions">
+                        <button class="btn btn-small btn-warning" onclick="openSwapModal()">↔️ Swap Battery</button>
+                    </div>
+                </div>
+                <div id="backupBatteryInfo" class="backup-battery-card" style="display: none;">
+                    <span>🛡️ Backup Available: </span>
+                    <span id="backupBatteryName">--</span>
+                </div>
+
+                <h3>📍 On-Field Setup <span class="badge" id="fieldBadge">0%</span></h3>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="fieldProgress" style="width: 0%">0%</div>
+                </div>
+                <div id="fieldChecklist" class="checklist-container"></div>
+
+                <div class="section-divider"></div>
+
+                <h3>🖥️ Driver Station Setup <span class="badge" id="driverBadge">0%</span></h3>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="driverProgress" style="width: 0%">0%</div>
+                </div>
+                <div id="driverChecklist" class="checklist-container"></div>
+
+                <div class="section-divider"></div>
+
+                <h3>🔧 Robot Systems Test <span class="badge" id="robotTestBadge">0%</span></h3>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="robotTestProgress" style="width: 0%">0%</div>
+                </div>
+                <div id="robotTestChecklist" class="checklist-container"></div>
+
+                <div style="margin-top: 20px; text-align: center;">
+                    <button class="btn btn-success" onclick="completeMatch()" id="completeMatchBtn" disabled>
+                        ✓ Complete Match & Record
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Robot Inspection Page -->
+        <div class="page" id="robot">
+            <div class="card">
+                <h2>
+                    Physical Robot Checklist
+                    <div>
+                        <button class="btn btn-small" onclick="toggleEditMode('robot')">✏️ Edit</button>
+                        <button class="btn btn-warning btn-small" onclick="resetRobotChecklist()">Reset Checks</button>
+                    </div>
+                </h2>
+                <p style="color: var(--text-muted); margin-bottom: 15px;">
+                    Pre-event and periodic robot inspection checklist.
+                </p>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="robotProgress" style="width: 0%">0%</div>
+                </div>
+                <div id="robotChecklist" class="checklist-container"></div>
+
+                <div class="add-item-form" id="addRobotItemForm" style="display: none;">
+                    <input type="text" id="newRobotItem" placeholder="Add new checklist item...">
+                    <select id="newRobotCategory">
+                        <option value="frame">Frame & Structure</option>
+                        <option value="electrical">Electrical</option>
+                        <option value="mechanisms">Mechanisms</option>
+                        <option value="safety">Safety</option>
+                    </select>
+                    <button class="btn" onclick="addRobotItem()">Add</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Batteries Page -->
+        <div class="page" id="batteries">
+            <div class="card">
+                <h2>
+                    Competition Setup
+                </h2>
+                <p style="color: var(--text-muted); margin-bottom: 15px;">
+                    Configure your battery rotation for the competition. One battery will always be kept as backup.
+                </p>
+
+                <div class="match-info" style="margin-bottom: 15px;">
+                    <div>
+                        <label>Expected Total Matches</label>
+                        <input type="number" id="totalMatches" min="1" value="12" onchange="updateScheduleConfig()">
+                    </div>
+                    <div>
+                        <label>Backup Battery</label>
+                        <select id="backupBattery" onchange="updateScheduleConfig()">
+                            <option value="">Select backup...</option>
+                        </select>
+                    </div>
+                </div>
+                <button class="btn btn-success" onclick="generateSchedule()">🔄 Generate Schedule</button>
+                <button class="btn btn-warning" onclick="clearSchedule()" style="margin-left: 10px;">Clear
+                    Schedule</button>
+            </div>
+
+            <div class="card">
+                <h2>
+                    🔋 Battery Schedule
+                    <span class="badge" id="scheduleBadge">Not Generated</span>
+                </h2>
+                <div id="batteryScheduleView"></div>
+            </div>
+
+            <div class="card">
+                <h2>
+                    📦 Battery Inventory
+                    <button class="btn btn-small" onclick="openBatteryModal()">+ Add Battery</button>
+                </h2>
+                <div class="battery-grid" id="batteryGrid"></div>
+            </div>
+
+            <div class="card">
+                <h2>Battery History</h2>
+                <table class="history-table">
+                    <thead>
+                        <tr>
+                            <th>Match</th>
+                            <th>Battery</th>
+                            <th>Pre-Voltage</th>
+                            <th>Post-Voltage</th>
+                            <th>Notes</th>
+                        </tr>
+                    </thead>
+                    <tbody id="batteryHistoryBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Settings Page -->
+        <div class="page" id="settings">
+            <div class="card">
+                <h2>Checklist Configuration</h2>
+                <p style="color: var(--text-muted); margin-bottom: 15px;">
+                    Customize your checklists for your team's specific needs.
+                </p>
+
+                <h3>On-Field Setup Items</h3>
+                <div id="editFieldChecklist" class="edit-mode"></div>
+                <div class="add-item-form">
+                    <input type="text" id="newFieldItem" placeholder="Add field setup item...">
+                    <button class="btn" onclick="addChecklistItem('field')">Add</button>
+                </div>
+
+                <div class="section-divider"></div>
+
+                <h3>Driver Station Items</h3>
+                <div id="editDriverChecklist" class="edit-mode"></div>
+                <div class="add-item-form">
+                    <input type="text" id="newDriverItem" placeholder="Add driver station item...">
+                    <button class="btn" onclick="addChecklistItem('driver')">Add</button>
+                </div>
+
+                <div class="section-divider"></div>
+
+                <h3>Robot Systems Test Items</h3>
+                <div id="editRobotTestChecklist" class="edit-mode"></div>
+                <div class="add-item-form">
+                    <input type="text" id="newRobotTestItem" placeholder="Add robot test item...">
+                    <button class="btn" onclick="addChecklistItem('robotTest')">Add</button>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>Data Management</h2>
+                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                    <button class="btn" onclick="exportData()">📤 Export All Data</button>
+                    <button class="btn" onclick="document.getElementById('importFile').click()">📥 Import Data</button>
+                    <button class="btn btn-danger" onclick="clearAllData()">🗑️ Clear All Data</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Battery Modal -->
+    <div class="modal" id="batteryModal">
+        <div class="modal-content">
+            <h2 id="batteryModalTitle">Add Battery</h2>
+            <div class="form-group">
+                <label>Battery Name/ID</label>
+                <input type="text" id="batteryName" placeholder="e.g., Battery 1, B-2024-01">
+            </div>
+            <div class="form-group">
+                <label>Status</label>
+                <select id="batteryStatus">
+                    <option value="ready">Ready (Charged)</option>
+                    <option value="charging">Charging</option>
+                    <option value="in-use">In Use</option>
+                    <option value="low">Low/Needs Charge</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Last Voltage (V)</label>
+                <input type="number" id="batteryVoltage" step="0.01" placeholder="12.80">
+            </div>
+            <div class="form-group">
+                <label>Notes</label>
+                <textarea id="batteryNotes" placeholder="Any notes about this battery..."></textarea>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-danger" onclick="closeBatteryModal()">Cancel</button>
+                <button class="btn btn-success" onclick="saveBattery()">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Issue Modal -->
+    <div class="modal" id="issueModal">
+        <div class="modal-content">
+            <h2>Report Issue</h2>
+            <div class="form-group">
+                <label>Issue Description</label>
+                <textarea id="issueDescription" placeholder="Describe the issue..."></textarea>
+            </div>
+            <div class="form-group">
+                <label>Severity</label>
+                <select id="issueSeverity">
+                    <option value="low">Low - Can continue</option>
+                    <option value="medium">Medium - Monitor closely</option>
+                    <option value="high">High - Needs immediate attention</option>
+                </select>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-danger" onclick="closeIssueModal()">Cancel</button>
+                <button class="btn btn-success" onclick="saveIssue()">Save Issue</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Swap Battery Modal -->
+    <div class="modal" id="swapModal">
+        <div class="modal-content">
+            <h2>Swap Battery for Match</h2>
+            <p style="color: var(--text-muted); margin-bottom: 15px;">Select a different battery for this match. This
+                will update the schedule.</p>
+            <div class="form-group">
+                <label>New Battery</label>
+                <select id="swapBatterySelect"></select>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-danger" onclick="closeSwapModal()">Cancel</button>
+                <button class="btn btn-success" onclick="confirmSwap()">Confirm Swap</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Schedule Modal -->
+    <div class="modal" id="editScheduleModal">
+        <div class="modal-content">
+            <h2>Edit Match <span id="editMatchNum"></span> Battery</h2>
+            <div class="form-group">
+                <label>Battery</label>
+                <select id="editScheduleBattery"></select>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-danger" onclick="closeEditScheduleModal()">Cancel</button>
+                <button class="btn btn-success" onclick="saveScheduleEdit()">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ============ DATA STRUCTURES ============
+        const DEFAULT_DATA = {
+            teamNumber: '',
+            currentMatch: { type: 'practice', number: 1 },
+            checklists: {
+                field: {
+                    items: [
+                        { id: 1, text: 'Robot positioned correctly on field', checked: false, hasIssue: false },
+                        { id: 2, text: 'Bumpers installed and secure', checked: false, hasIssue: false },
+                        { id: 3, text: 'Battery connected and secured', checked: false, hasIssue: false },
+                        { id: 4, text: 'Robot enabled briefly - systems respond', checked: false, hasIssue: false },
+                        { id: 5, text: 'Robot disabled and ready', checked: false, hasIssue: false },
+                        { id: 6, text: 'All loose items removed from robot', checked: false, hasIssue: false },
+                        { id: 7, text: 'Verified alliance color on driver station', checked: false, hasIssue: false }
+                    ]
+                },
+                driver: {
+                    items: [
+                        { id: 1, text: 'Driver station laptop connected to field', checked: false, hasIssue: false },
+                        { id: 2, text: 'FRC Driver Station software open', checked: false, hasIssue: false },
+                        { id: 3, text: 'Team number verified in DS', checked: false, hasIssue: false },
+                        { id: 4, text: 'Joysticks/controllers connected and mapped', checked: false, hasIssue: false },
+                        { id: 5, text: 'Robot communication established', checked: false, hasIssue: false },
+                        { id: 6, text: 'Camera feeds working (if applicable)', checked: false, hasIssue: false },
+                        { id: 7, text: 'Dashboard/Shuffleboard displaying data', checked: false, hasIssue: false },
+                        { id: 8, text: 'Battery voltage displayed and good', checked: false, hasIssue: false }
+                    ]
+                },
+                robotTest: {
+                    items: [
+                        { id: 1, text: 'Drivetrain moves in all directions', checked: false, hasIssue: false },
+                        { id: 2, text: 'All motors responding correctly', checked: false, hasIssue: false },
+                        { id: 4, text: 'Intake mechanism functions', checked: false, hasIssue: false },
+                        { id: 5, text: 'Shooter/scoring mechanism functions', checked: false, hasIssue: false },
+                        { id: 6, text: 'Climber mechanism functions (if applicable)', checked: false, hasIssue: false },
+                        { id: 7, text: 'Sensors reading correctly', checked: false, hasIssue: false },
+                        { id: 8, text: 'Autonomous mode ready', checked: false, hasIssue: false }
+                    ]
+                },
+                robot: {
+                    items: [
+                        { id: 1, text: 'Frame perimeter within limits', checked: false, hasIssue: false, category: 'frame' },
+                        { id: 2, text: 'Robot weight within limits', checked: false, hasIssue: false, category: 'frame' },
+                        { id: 3, text: 'All bolts tight and secured', checked: false, hasIssue: false, category: 'frame' },
+                        { id: 4, text: 'Bumpers meet rules (height, coverage)', checked: false, hasIssue: false, category: 'frame' },
+                        { id: 5, text: 'Main breaker accessible', checked: false, hasIssue: false, category: 'electrical' },
+                        { id: 6, text: 'All wiring properly secured', checked: false, hasIssue: false, category: 'electrical' },
+                        { id: 7, text: 'Battery mount secure', checked: false, hasIssue: false, category: 'electrical' },
+                        { id: 8, text: 'PDP/PDH breakers correct amperage', checked: false, hasIssue: false, category: 'electrical' },
+                        { id: 9, text: 'Radio properly mounted and powered', checked: false, hasIssue: false, category: 'electrical' },
+                        { id: 10, text: 'RoboRIO secure and LEDs normal', checked: false, hasIssue: false, category: 'electrical' },
+                        { id: 14, text: 'All mechanisms move freely', checked: false, hasIssue: false, category: 'mechanisms' },
+                        { id: 15, text: 'No loose parts or debris', checked: false, hasIssue: false, category: 'safety' },
+                        { id: 16, text: 'No sharp edges exposed', checked: false, hasIssue: false, category: 'safety' }
+                    ]
+                }
+            },
+            batteries: [],
+            matchHistory: [],
+            batteryHistory: [],
+            issues: [],
+            stats: {
+                matchesCompleted: 0,
+                issuesResolved: 0,
+                batteryCycles: 0
+            },
+            scheduleConfig: {
+                totalMatches: 12,
+                backupBatteryId: null
+            },
+            batterySchedule: [] // Array of { matchNumber, batteryId, completed, actualBatteryId }
+        };
+
+        let appData = {};
+        let editingBatteryIndex = null;
+        let currentIssueItem = null;
+        let editingScheduleMatch = null;
+
+        // ============ INITIALIZATION ============
+        function init() {
+            loadData();
+            setupNavigation();
+            renderAllChecklists();
+            renderBatteries();
+            renderBatterySchedule();
+            updateAllProgress();
+            updateDashboard();
+            updateScheduledBatteryDisplay();
+            syncMatchInfo();
+
+            // Bind team number input
+            document.getElementById('teamNumber').addEventListener('change', (e) => {
+                appData.teamNumber = e.target.value;
+                saveData();
+            });
+        }
+
+        function loadData() {
+            const saved = localStorage.getItem('frcTechnicianData');
+            if (saved) {
+                appData = JSON.parse(saved);
+                // Merge with defaults for any new fields
+                appData = deepMerge(JSON.parse(JSON.stringify(DEFAULT_DATA)), appData);
+            } else {
+                appData = JSON.parse(JSON.stringify(DEFAULT_DATA));
+            }
+            document.getElementById('teamNumber').value = appData.teamNumber || '';
+        }
+
+        function saveData() {
+            localStorage.setItem('frcTechnicianData', JSON.stringify(appData));
+        }
+
+        function deepMerge(target, source) {
+            for (const key in source) {
+                if (source[key] instanceof Object && key in target) {
+                    Object.assign(source[key], deepMerge(target[key], source[key]));
+                }
+            }
+            Object.assign(target || {}, source);
+            return target;
+        }
+
+        // ============ NAVIGATION ============
+        function setupNavigation() {
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const page = btn.dataset.page;
+                    showPage(page);
+                });
+            });
+        }
+
+        function showPage(pageId) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(pageId).classList.add('active');
+            document.querySelector(`[data-page="${pageId}"]`).classList.add('active');
+        }
+
+        // ============ CHECKLIST RENDERING ============
+        function renderChecklist(containerId, items, checklistKey) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = '';
+
+            const categories = {};
+            items.forEach((item, index) => {
+                const cat = item.category || 'general';
+                if (!categories[cat]) categories[cat] = [];
+                categories[cat].push({ ...item, index });
+            });
+
+            const categoryNames = {
+                frame: '🏗️ Frame & Structure',
+                electrical: '⚡ Electrical',
+                mechanisms: '⚙️ Mechanisms',
+                safety: '🛡️ Safety',
+                general: ''
+            };
+
+            Object.keys(categories).forEach(cat => {
+                if (cat !== 'general' && categoryNames[cat]) {
+                    const header = document.createElement('h4');
+                    header.style.marginTop = '15px';
+                    header.style.color = 'var(--text-muted)';
+                    header.textContent = categoryNames[cat];
+                    container.appendChild(header);
+                }
+
+                categories[cat].forEach(item => {
+                    const div = document.createElement('div');
+                    div.className = 'checklist-item' + (item.checked ? ' checked' : '') + (item.hasIssue ? ' issue' : '');
+                    div.innerHTML = `
+                        <input type="checkbox" id="${checklistKey}_${item.id}" 
+                            ${item.checked ? 'checked' : ''} 
+                            onchange="toggleCheck('${checklistKey}', ${item.index})">
+                        <label for="${checklistKey}_${item.id}">${item.text}</label>
+                        <div class="item-actions">
+                            <button class="issue-btn ${item.hasIssue ? 'flagged' : ''}" 
+                                onclick="toggleIssue('${checklistKey}', ${item.index})">
+                                ${item.hasIssue ? '⚠️ Issue' : '🚩'}
+                            </button>
+                        </div>
+                    `;
+                    container.appendChild(div);
+                });
+            });
+        }
+
+        function renderEditChecklist(containerId, items, checklistKey) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = '';
+
+            items.forEach((item, index) => {
+                const div = document.createElement('div');
+                div.className = 'checklist-item';
+                div.innerHTML = `
+                    <span style="flex: 1;">${item.text}</span>
+                    <div class="edit-controls">
+                        <button onclick="moveItem('${checklistKey}', ${index}, -1)" ${index === 0 ? 'disabled' : ''}>↑</button>
+                        <button onclick="moveItem('${checklistKey}', ${index}, 1)" ${index === items.length - 1 ? 'disabled' : ''}>↓</button>
+                        <button onclick="deleteItem('${checklistKey}', ${index})" style="color: var(--danger);">×</button>
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        function renderAllChecklists() {
+            renderChecklist('fieldChecklist', appData.checklists.field.items, 'field');
+            renderChecklist('driverChecklist', appData.checklists.driver.items, 'driver');
+            renderChecklist('robotTestChecklist', appData.checklists.robotTest.items, 'robotTest');
+            renderChecklist('robotChecklist', appData.checklists.robot.items, 'robot');
+
+            // Settings page edit views
+            renderEditChecklist('editFieldChecklist', appData.checklists.field.items, 'field');
+            renderEditChecklist('editDriverChecklist', appData.checklists.driver.items, 'driver');
+            renderEditChecklist('editRobotTestChecklist', appData.checklists.robotTest.items, 'robotTest');
+        }
+
+        // ============ CHECKLIST ACTIONS ============
+        function toggleCheck(checklistKey, index) {
+            appData.checklists[checklistKey].items[index].checked =
+                !appData.checklists[checklistKey].items[index].checked;
+            saveData();
+            renderAllChecklists();
+            updateAllProgress();
+            updateDashboard();
+        }
+
+        function toggleIssue(checklistKey, index) {
+            const item = appData.checklists[checklistKey].items[index];
+            if (!item.hasIssue) {
+                currentIssueItem = { checklistKey, index };
+                document.getElementById('issueModal').classList.add('active');
+            } else {
+                item.hasIssue = false;
+                saveData();
+                renderAllChecklists();
+                updateDashboard();
+            }
+        }
+
+        function saveIssue() {
+            const description = document.getElementById('issueDescription').value;
+            const severity = document.getElementById('issueSeverity').value;
+
+            if (currentIssueItem && description) {
+                const { checklistKey, index } = currentIssueItem;
+                appData.checklists[checklistKey].items[index].hasIssue = true;
+
+                appData.issues.push({
+                    id: Date.now(),
+                    item: appData.checklists[checklistKey].items[index].text,
+                    description,
+                    severity,
+                    match: `${appData.currentMatch.type} ${appData.currentMatch.number}`,
+                    timestamp: new Date().toISOString(),
+                    resolved: false
+                });
+
+                saveData();
+                renderAllChecklists();
+                updateDashboard();
+            }
+            closeIssueModal();
+        }
+
+        function closeIssueModal() {
+            document.getElementById('issueModal').classList.remove('active');
+            document.getElementById('issueDescription').value = '';
+            document.getElementById('issueSeverity').value = 'low';
+            currentIssueItem = null;
+        }
+
+        function addChecklistItem(checklistKey) {
+            const inputId = checklistKey === 'robotTest' ? 'newRobotTestItem' : `new${capitalize(checklistKey)}Item`;
+            const input = document.getElementById(inputId);
+            const text = input.value.trim();
+
+            if (text) {
+                const items = appData.checklists[checklistKey].items;
+                const newId = Math.max(0, ...items.map(i => i.id)) + 1;
+                items.push({ id: newId, text, checked: false, hasIssue: false });
+                input.value = '';
+                saveData();
+                renderAllChecklists();
+            }
+        }
+
+        function moveItem(checklistKey, index, direction) {
+            const items = appData.checklists[checklistKey].items;
+            const newIndex = index + direction;
+            if (newIndex >= 0 && newIndex < items.length) {
+                [items[index], items[newIndex]] = [items[newIndex], items[index]];
+                saveData();
+                renderAllChecklists();
+            }
+        }
+
+        function deleteItem(checklistKey, index) {
+            if (confirm('Delete this checklist item?')) {
+                appData.checklists[checklistKey].items.splice(index, 1);
+                saveData();
+                renderAllChecklists();
+            }
+        }
+
+        function addRobotItem() {
+            const text = document.getElementById('newRobotItem').value.trim();
+            const category = document.getElementById('newRobotCategory').value;
+
+            if (text) {
+                const items = appData.checklists.robot.items;
+                const newId = Math.max(0, ...items.map(i => i.id)) + 1;
+                items.push({ id: newId, text, checked: false, hasIssue: false, category });
+                document.getElementById('newRobotItem').value = '';
+                saveData();
+                renderAllChecklists();
+            }
+        }
+
+        function toggleEditMode(mode) {
+            const form = document.getElementById('addRobotItemForm');
+            form.style.display = form.style.display === 'none' ? 'flex' : 'none';
+        }
+
+        // ============ PROGRESS TRACKING ============
+        function calculateProgress(items) {
+            if (!items.length) return 0;
+            const checked = items.filter(i => i.checked).length;
+            return Math.round((checked / items.length) * 100);
+        }
+
+        function updateProgressBar(progressId, badgeId, percentage) {
+            const progressEl = document.getElementById(progressId);
+            const badgeEl = document.getElementById(badgeId);
+
+            if (progressEl) {
+                progressEl.style.width = percentage + '%';
+                progressEl.textContent = percentage + '%';
+            }
+            if (badgeEl) {
+                badgeEl.textContent = percentage + '%';
+                badgeEl.className = 'badge ' + (percentage === 100 ? 'badge-success' : percentage >= 50 ? 'badge-warning' : 'badge-danger');
+            }
+        }
+
+        function updateAllProgress() {
+            const fieldProgress = calculateProgress(appData.checklists.field.items);
+            const driverProgress = calculateProgress(appData.checklists.driver.items);
+            const robotTestProgress = calculateProgress(appData.checklists.robotTest.items);
+            const robotProgress = calculateProgress(appData.checklists.robot.items);
+
+            updateProgressBar('fieldProgress', 'fieldBadge', fieldProgress);
+            updateProgressBar('driverProgress', 'driverBadge', driverProgress);
+            updateProgressBar('robotTestProgress', 'robotTestBadge', robotTestProgress);
+            updateProgressBar('robotProgress', null, robotProgress);
+
+            // Enable complete button if all match checklists are 100%
+            const completeBtn = document.getElementById('completeMatchBtn');
+            completeBtn.disabled = !(fieldProgress === 100 && driverProgress === 100 && robotTestProgress === 100);
+        }
+
+        // ============ DASHBOARD ============
+        function updateDashboard() {
+            // Status dots
+            const fieldProgress = calculateProgress(appData.checklists.field.items);
+            const driverProgress = calculateProgress(appData.checklists.driver.items);
+            const robotTestProgress = calculateProgress(appData.checklists.robotTest.items);
+
+            setStatusDot('fieldStatusDot', fieldProgress);
+            setStatusDot('driverStatusDot', driverProgress);
+            setStatusDot('robotStatusDot', robotTestProgress);
+
+            // Battery status
+            const readyBatteries = appData.batteries.filter(b => b.status === 'ready').length;
+            document.getElementById('batteryStatusDot').className =
+                'status-dot ' + (readyBatteries > 0 ? 'green' : 'red');
+
+            // Stats
+            document.getElementById('matchesCompleted').textContent = appData.stats.matchesCompleted;
+            document.getElementById('issuesResolved').textContent = appData.stats.issuesResolved;
+            document.getElementById('batteryCycles').textContent = appData.stats.batteryCycles;
+
+            // Active issues
+            const activeIssues = appData.issues.filter(i => !i.resolved);
+            const issuesCard = document.getElementById('activeIssuesCard');
+            const issuesList = document.getElementById('activeIssuesList');
+
+            if (activeIssues.length > 0) {
+                issuesCard.style.display = 'block';
+                issuesList.innerHTML = activeIssues.map(issue => `
+                    <div class="issue-item">
+                        <h4>${issue.item}</h4>
+                        <p>${issue.description}</p>
+                        <p><strong>Match:</strong> ${issue.match} | <strong>Severity:</strong> ${issue.severity}</p>
+                        <button class="btn btn-small btn-success" onclick="resolveIssue(${issue.id})">Mark Resolved</button>
+                    </div>
+                `).join('');
+            } else {
+                issuesCard.style.display = 'none';
+            }
+
+            // Update scheduled battery display
+            updateDashboardBattery();
+        }
+
+        function updateDashboardBattery() {
+            const display = document.getElementById('dashScheduledBattery');
+            const currentMatchNum = appData.currentMatch?.number || 1;
+            const scheduleEntry = appData.batterySchedule?.find(s => s.matchNumber === currentMatchNum);
+
+            if (scheduleEntry) {
+                const battery = appData.batteries.find(b => b.id === (scheduleEntry.actualBatteryId || scheduleEntry.batteryId));
+                display.textContent = battery?.name || 'Not assigned';
+                display.style.color = 'var(--success)';
+            } else {
+                display.textContent = 'No schedule';
+                display.style.color = 'var(--text-muted)';
+            }
+        }
+
+        function setStatusDot(id, progress) {
+            const dot = document.getElementById(id);
+            if (progress === 100) {
+                dot.className = 'status-dot green';
+            } else if (progress >= 50) {
+                dot.className = 'status-dot yellow';
+            } else {
+                dot.className = 'status-dot red';
+            }
+        }
+
+        function resolveIssue(issueId) {
+            const issue = appData.issues.find(i => i.id === issueId);
+            if (issue) {
+                issue.resolved = true;
+                appData.stats.issuesResolved++;
+                saveData();
+                updateDashboard();
+            }
+        }
+
+        // ============ MATCH MANAGEMENT ============
+        function syncMatchInfo() {
+            const type = document.getElementById('matchType').value;
+            const number = document.getElementById('matchNumber').value;
+
+            appData.currentMatch = { type, number: parseInt(number) };
+
+            document.getElementById('dashMatchType').value = type;
+            document.getElementById('dashMatchNumber').value = number;
+
+            updateScheduledBatteryDisplay();
+            renderBatterySchedule();
+            saveData();
+        }
+
+        function resetMatchChecklist() {
+            if (confirm('Reset all match checklist items? This will uncheck everything.')) {
+                ['field', 'driver', 'robotTest'].forEach(key => {
+                    appData.checklists[key].items.forEach(item => {
+                        item.checked = false;
+                    });
+                });
+                saveData();
+                renderAllChecklists();
+                updateAllProgress();
+                updateDashboard();
+            }
+        }
+
+        function resetRobotChecklist() {
+            if (confirm('Reset all robot inspection checks?')) {
+                appData.checklists.robot.items.forEach(item => {
+                    item.checked = false;
+                });
+                saveData();
+                renderAllChecklists();
+                updateAllProgress();
+            }
+        }
+
+        function completeMatch() {
+            const currentMatchNum = appData.currentMatch.number;
+
+            // Get scheduled battery for this match
+            const scheduleEntry = appData.batterySchedule.find(s => s.matchNumber === currentMatchNum);
+            const batteryId = scheduleEntry ? (scheduleEntry.actualBatteryId || scheduleEntry.batteryId) : null;
+
+            // Record match
+            appData.matchHistory.push({
+                type: appData.currentMatch.type,
+                number: currentMatchNum,
+                timestamp: new Date().toISOString(),
+                batteryUsed: batteryId || 'Unknown'
+            });
+
+            // Update battery status and mark schedule as completed
+            if (batteryId) {
+                const battery = appData.batteries.find(b => b.id === batteryId);
+                if (battery) {
+                    battery.status = 'charging';
+                    battery.matchesUsed = (battery.matchesUsed || 0) + 1;
+
+                    appData.batteryHistory.push({
+                        match: `${appData.currentMatch.type} ${currentMatchNum}`,
+                        battery: battery.name,
+                        timestamp: new Date().toISOString()
+                    });
+
+                    appData.stats.batteryCycles++;
+                }
+            }
+
+            // Mark schedule entry as completed
+            if (scheduleEntry) {
+                scheduleEntry.completed = true;
+            }
+
+            appData.stats.matchesCompleted++;
+
+            // Auto increment match number
+            appData.currentMatch.number++;
+            document.getElementById('matchNumber').value = appData.currentMatch.number;
+            document.getElementById('dashMatchNumber').value = appData.currentMatch.number;
+
+            // Reset checklists
+            ['field', 'driver', 'robotTest'].forEach(key => {
+                appData.checklists[key].items.forEach(item => {
+                    item.checked = false;
+                    item.hasIssue = false;
+                });
+            });
+
+            saveData();
+            renderAllChecklists();
+            renderBatteries();
+            renderBatterySchedule();
+            updateAllProgress();
+            updateDashboard();
+            updateScheduledBatteryDisplay();
+
+            alert('Match recorded! Checklists reset for next match.');
+        }
+
+        // ============ BATTERY MANAGEMENT ============
+        function renderBatteries() {
+            const grid = document.getElementById('batteryGrid');
+
+            // Update backup battery dropdown
+            const backupSelect = document.getElementById('backupBattery');
+            const currentBackup = appData.scheduleConfig?.backupBatteryId;
+            backupSelect.innerHTML = '<option value="">Select backup...</option>' +
+                appData.batteries.map(b =>
+                    `<option value="${b.id}" ${b.id === currentBackup ? 'selected' : ''}>${b.name}</option>`
+                ).join('');
+
+            // Update total matches input
+            document.getElementById('totalMatches').value = appData.scheduleConfig?.totalMatches || 12;
+
+            // All batteries grid
+            if (appData.batteries.length === 0) {
+                grid.innerHTML = '<p style="color: var(--text-muted);">No batteries added yet. Click "Add Battery" to get started.</p>';
+                return;
+            }
+
+            const backupId = appData.scheduleConfig?.backupBatteryId;
+            grid.innerHTML = appData.batteries.map((battery, index) => `
+                <div class="battery-card ${battery.status}">
+                    <h4>${battery.name} ${battery.id === backupId ? '<span class="backup-badge">BACKUP</span>' : ''}</h4>
+                    <p>Voltage: ${battery.voltage || 'N/A'}V</p>
+                    <p>Matches used: ${battery.matchesUsed || 0}</p>
+                    <span class="status status-${battery.status}">${battery.status.toUpperCase()}</span>
+                    <div style="margin-top: 10px;">
+                        <button class="btn btn-small" onclick="editBattery(${index})">Edit</button>
+                        <button class="btn btn-small btn-success" onclick="setBatteryStatus(${index}, 'ready')">Ready</button>
+                        <button class="btn btn-small btn-warning" onclick="setBatteryStatus(${index}, 'charging')">Charging</button>
+                        <button class="btn btn-small btn-danger" onclick="deleteBattery(${index})" style="margin-top: 5px; width: 100%;">Delete</button>
+                    </div>
+                </div>
+            `).join('');
+
+            updateBatteryDropdown();
+            renderBatteryHistory();
+        }
+
+
+
+        function renderBatteryHistory() {
+            const tbody = document.getElementById('batteryHistoryBody');
+            const history = appData.batteryHistory.slice(-10).reverse();
+
+            if (history.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: var(--text-muted);">No battery history yet</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = history.map(h => `
+                <tr>
+                    <td>${h.match}</td>
+                    <td>${h.battery}</td>
+                    <td>${h.preVoltage || '-'}</td>
+                    <td>${h.postVoltage || '-'}</td>
+                    <td>${h.notes || '-'}</td>
+                </tr>
+            `).join('');
+        }
+
+        function openBatteryModal() {
+            editingBatteryIndex = null;
+            document.getElementById('batteryModalTitle').textContent = 'Add Battery';
+            document.getElementById('batteryName').value = '';
+            document.getElementById('batteryStatus').value = 'ready';
+            document.getElementById('batteryVoltage').value = '';
+            document.getElementById('batteryNotes').value = '';
+            document.getElementById('batteryModal').classList.add('active');
+        }
+
+        function editBattery(index) {
+            editingBatteryIndex = index;
+            const battery = appData.batteries[index];
+            document.getElementById('batteryModalTitle').textContent = 'Edit Battery';
+            document.getElementById('batteryName').value = battery.name;
+            document.getElementById('batteryStatus').value = battery.status;
+            document.getElementById('batteryVoltage').value = battery.voltage || '';
+            document.getElementById('batteryNotes').value = battery.notes || '';
+            document.getElementById('batteryModal').classList.add('active');
+        }
+
+        function closeBatteryModal() {
+            document.getElementById('batteryModal').classList.remove('active');
+            editingBatteryIndex = null;
+        }
+
+        function saveBattery() {
+            const name = document.getElementById('batteryName').value.trim();
+            const status = document.getElementById('batteryStatus').value;
+            const voltage = document.getElementById('batteryVoltage').value;
+            const notes = document.getElementById('batteryNotes').value.trim();
+
+            if (!name) {
+                alert('Please enter a battery name');
+                return;
+            }
+
+            const batteryData = {
+                id: editingBatteryIndex !== null ? appData.batteries[editingBatteryIndex].id : Date.now().toString(),
+                name,
+                status,
+                voltage: voltage ? parseFloat(voltage) : null,
+                notes,
+                matchesUsed: editingBatteryIndex !== null ? appData.batteries[editingBatteryIndex].matchesUsed : 0
+            };
+
+            if (editingBatteryIndex !== null) {
+                appData.batteries[editingBatteryIndex] = batteryData;
+            } else {
+                appData.batteries.push(batteryData);
+            }
+
+            saveData();
+            renderBatteries();
+            updateDashboard();
+            closeBatteryModal();
+        }
+
+        function setBatteryStatus(index, status) {
+            appData.batteries[index].status = status;
+            saveData();
+            renderBatteries();
+            updateDashboard();
+        }
+
+        function deleteBattery(index) {
+            const battery = appData.batteries[index];
+            if (confirm(`Are you sure you want to delete battery "${battery.name}"?`)) {
+                // Check if it's the backup battery
+                if (appData.scheduleConfig?.backupBatteryId === battery.id) {
+                    appData.scheduleConfig.backupBatteryId = null;
+                }
+
+                // Remove from schedule if present
+                appData.batterySchedule.forEach(entry => {
+                    if (entry.batteryId === battery.id) {
+                        entry.batteryId = null; // Will show as Unknown
+                    }
+                    if (entry.actualBatteryId === battery.id) {
+                        entry.actualBatteryId = null;
+                    }
+                });
+
+                appData.batteries.splice(index, 1);
+                saveData();
+                renderBatteries();
+                renderBatterySchedule();
+                updateScheduledBatteryDisplay();
+                updateDashboard();
+            }
+        }
+
+        // ============ BATTERY SCHEDULE ============
+        function updateScheduleConfig() {
+            appData.scheduleConfig = {
+                totalMatches: parseInt(document.getElementById('totalMatches').value) || 12,
+                backupBatteryId: document.getElementById('backupBattery').value || null
+            };
+            saveData();
+            renderBatteries();
+        }
+
+        function generateSchedule() {
+            const totalMatches = appData.scheduleConfig?.totalMatches || 12;
+            const backupId = appData.scheduleConfig?.backupBatteryId;
+
+            // Get rotation batteries (all except backup)
+            const rotationBatteries = appData.batteries.filter(b => b.id !== backupId);
+
+            if (rotationBatteries.length === 0) {
+                alert('Please add batteries and optionally select a backup battery first.');
+                return;
+            }
+
+            if (rotationBatteries.length < 2) {
+                alert('You need at least 2 batteries in rotation (plus optional backup) for a proper schedule.');
+                return;
+            }
+
+            // Generate schedule cycling through rotation batteries
+            appData.batterySchedule = [];
+            for (let i = 1; i <= totalMatches; i++) {
+                const batteryIndex = (i - 1) % rotationBatteries.length;
+                const wasCompleted = appData.batterySchedule.find(s => s.matchNumber === i)?.completed || false;
+                appData.batterySchedule.push({
+                    matchNumber: i,
+                    batteryId: rotationBatteries[batteryIndex].id,
+                    completed: wasCompleted,
+                    actualBatteryId: null // Used when swapped
+                });
+            }
+
+            saveData();
+            renderBatterySchedule();
+            updateScheduledBatteryDisplay();
+            alert(`Schedule generated for ${totalMatches} matches using ${rotationBatteries.length} batteries in rotation.`);
+        }
+
+        function clearSchedule() {
+            if (confirm('Clear the battery schedule?')) {
+                appData.batterySchedule = [];
+                saveData();
+                renderBatterySchedule();
+                updateScheduledBatteryDisplay();
+            }
+        }
+
+        function renderBatterySchedule() {
+            const container = document.getElementById('batteryScheduleView');
+            const badge = document.getElementById('scheduleBadge');
+
+            if (!appData.batterySchedule || appData.batterySchedule.length === 0) {
+                container.innerHTML = '<p style="color: var(--text-muted);">No schedule generated yet. Add batteries and click "Generate Schedule".</p>';
+                badge.textContent = 'Not Generated';
+                badge.className = 'badge badge-danger';
+                return;
+            }
+
+            const completedCount = appData.batterySchedule.filter(s => s.completed).length;
+            badge.textContent = `${completedCount}/${appData.batterySchedule.length}`;
+            badge.className = 'badge ' + (completedCount === appData.batterySchedule.length ? 'badge-success' : 'badge-warning');
+
+            const currentMatchNum = appData.currentMatch?.number || 1;
+            const backupBattery = appData.batteries.find(b => b.id === appData.scheduleConfig?.backupBatteryId);
+
+            let html = '';
+            if (backupBattery) {
+                html += `<div class="backup-battery-card" style="margin-bottom: 15px;">
+                    <span>🛡️ Backup Battery: </span>
+                    <span>${backupBattery.name}</span>
+                    <span style="margin-left: 10px; color: var(--text-muted);">(${backupBattery.status})</span>
+                </div>`;
+            }
+
+            html += '<table class="schedule-table"><thead><tr><th>Match</th><th>Scheduled Battery</th><th>Status</th><th>Actions</th></tr></thead><tbody>';
+
+            appData.batterySchedule.forEach(entry => {
+                const battery = appData.batteries.find(b => b.id === (entry.actualBatteryId || entry.batteryId));
+                const originalBattery = entry.actualBatteryId ? appData.batteries.find(b => b.id === entry.batteryId) : null;
+                const isCurrent = entry.matchNumber === currentMatchNum;
+                const rowClass = entry.completed ? 'completed' : (isCurrent ? 'current-match' : '');
+
+                html += `<tr class="${rowClass}">
+                    <td>Match ${entry.matchNumber}${isCurrent ? ' (Current)' : ''}</td>
+                    <td>
+                        ${battery?.name || 'Unknown'}
+                        ${originalBattery ? `<span style="color: var(--text-muted); font-size: 0.8rem;"> (was: ${originalBattery.name})</span>` : ''}
+                    </td>
+                    <td>${entry.completed ? '✓ Completed' : 'Pending'}</td>
+                    <td>
+                        ${!entry.completed ? `<button class="btn btn-small" onclick="openEditScheduleModal(${entry.matchNumber})">Edit</button>` : '-'}
+                    </td>
+                </tr>`;
+            });
+
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        }
+
+        function updateScheduledBatteryDisplay() {
+            const infoDiv = document.getElementById('scheduledBatteryInfo');
+            const nameSpan = document.getElementById('scheduledBatteryName');
+            const backupDiv = document.getElementById('backupBatteryInfo');
+            const backupNameSpan = document.getElementById('backupBatteryName');
+
+            const currentMatchNum = appData.currentMatch?.number || 1;
+            const scheduleEntry = appData.batterySchedule?.find(s => s.matchNumber === currentMatchNum);
+
+            if (scheduleEntry) {
+                const battery = appData.batteries.find(b => b.id === (scheduleEntry.actualBatteryId || scheduleEntry.batteryId));
+                infoDiv.style.display = 'flex';
+                nameSpan.textContent = battery?.name || 'Unknown';
+            } else {
+                infoDiv.style.display = 'none';
+            }
+
+            // Show backup battery info
+            const backupBattery = appData.batteries.find(b => b.id === appData.scheduleConfig?.backupBatteryId);
+            if (backupBattery) {
+                backupDiv.style.display = 'block';
+                backupNameSpan.textContent = `${backupBattery.name} (${backupBattery.status})`;
+            } else {
+                backupDiv.style.display = 'none';
+            }
+        }
+
+        // Swap battery modal functions
+        function openSwapModal() {
+            const select = document.getElementById('swapBatterySelect');
+            const currentMatchNum = appData.currentMatch?.number || 1;
+            const scheduleEntry = appData.batterySchedule?.find(s => s.matchNumber === currentMatchNum);
+            const currentBatteryId = scheduleEntry ? (scheduleEntry.actualBatteryId || scheduleEntry.batteryId) : null;
+
+            // Show all batteries except backup (unless using backup for swap)
+            select.innerHTML = appData.batteries.map(b =>
+                `<option value="${b.id}" ${b.id === currentBatteryId ? 'selected' : ''}>${b.name} (${b.status})${b.id === appData.scheduleConfig?.backupBatteryId ? ' - BACKUP' : ''}</option>`
+            ).join('');
+
+            document.getElementById('swapModal').classList.add('active');
+        }
+
+        function closeSwapModal() {
+            document.getElementById('swapModal').classList.remove('active');
+        }
+
+        function confirmSwap() {
+            const newBatteryId = document.getElementById('swapBatterySelect').value;
+            const currentMatchNum = appData.currentMatch?.number || 1;
+            const scheduleEntry = appData.batterySchedule?.find(s => s.matchNumber === currentMatchNum);
+
+            if (scheduleEntry && newBatteryId) {
+                scheduleEntry.actualBatteryId = newBatteryId;
+                saveData();
+                renderBatterySchedule();
+                updateScheduledBatteryDisplay();
+            }
+            closeSwapModal();
+        }
+
+        // Edit schedule modal functions
+        function openEditScheduleModal(matchNum) {
+            editingScheduleMatch = matchNum;
+            document.getElementById('editMatchNum').textContent = matchNum;
+
+            const select = document.getElementById('editScheduleBattery');
+            const scheduleEntry = appData.batterySchedule?.find(s => s.matchNumber === matchNum);
+            const currentBatteryId = scheduleEntry ? (scheduleEntry.actualBatteryId || scheduleEntry.batteryId) : null;
+
+            select.innerHTML = appData.batteries
+                .filter(b => b.id !== appData.scheduleConfig?.backupBatteryId)
+                .map(b => `<option value="${b.id}" ${b.id === currentBatteryId ? 'selected' : ''}>${b.name}</option>`)
+                .join('');
+
+            document.getElementById('editScheduleModal').classList.add('active');
+        }
+
+        function closeEditScheduleModal() {
+            document.getElementById('editScheduleModal').classList.remove('active');
+            editingScheduleMatch = null;
+        }
+
+        function saveScheduleEdit() {
+            const newBatteryId = document.getElementById('editScheduleBattery').value;
+            const scheduleEntry = appData.batterySchedule?.find(s => s.matchNumber === editingScheduleMatch);
+
+            if (scheduleEntry && newBatteryId) {
+                scheduleEntry.actualBatteryId = newBatteryId;
+                saveData();
+                renderBatterySchedule();
+                updateScheduledBatteryDisplay();
+            }
+            closeEditScheduleModal();
+        }
+
+        // ============ DATA IMPORT/EXPORT ============
+        function exportData() {
+            const dataStr = JSON.stringify(appData, null, 2);
+            const blob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `frc-technician-${appData.teamNumber || 'team'}-${new Date().toISOString().split('T')[0]}.json`;
+            a.click();
+
+            URL.revokeObjectURL(url);
+        }
+
+        function importData(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const imported = JSON.parse(e.target.result);
+                    if (confirm('Import this data? This will replace your current data.')) {
+                        appData = deepMerge(JSON.parse(JSON.stringify(DEFAULT_DATA)), imported);
+                        saveData();
+                        document.getElementById('teamNumber').value = appData.teamNumber || '';
+                        renderAllChecklists();
+                        renderBatteries();
+                        updateAllProgress();
+                        updateDashboard();
+                        alert('Data imported successfully!');
+                    }
+                } catch (err) {
+                    alert('Error importing data: Invalid file format');
+                }
+            };
+            reader.readAsText(file);
+            event.target.value = '';
+        }
+
+        function clearAllData() {
+            if (confirm('Are you sure you want to delete ALL data? This cannot be undone!')) {
+                if (confirm('Really delete everything? Type "DELETE" in the next prompt to confirm.')) {
+                    const confirmation = prompt('Type DELETE to confirm:');
+                    if (confirmation === 'DELETE') {
+                        localStorage.removeItem('frcTechnicianData');
+                        appData = JSON.parse(JSON.stringify(DEFAULT_DATA));
+                        document.getElementById('teamNumber').value = '';
+                        renderAllChecklists();
+                        renderBatteries();
+                        updateAllProgress();
+                        updateDashboard();
+                        alert('All data has been cleared.');
+                    }
+                }
+            }
+        }
+
+        // ============ UTILITIES ============
+        function capitalize(str) {
+            return str.charAt(0).toUpperCase() + str.slice(1);
+        }
+
+        // Initialize on load
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+
+</html>
