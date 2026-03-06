@@ -1864,7 +1864,7 @@
                     <h4>${battery.name} ${battery.id === backupId ? '<span class="backup-badge">BACKUP</span>' : ''}${battery.flagged ? '<span class="flagged-badge">FLAGGED</span>' : ''}</h4>
                     <p>Voltage: ${battery.voltage || 'N/A'}V</p>
                     <p>Matches used: ${battery.matchesUsed || 0}</p>
-                    <p>Brown outs: ${battery.brownOutCount || 0} ${(battery.brownOutCount || 0) > 0 ? '<span class="brownout-count">⚡ ' + battery.brownOutCount + '</span>' : ''}</p>
+                    <p>Brown outs: ${battery.brownOutCount || 0} ${(battery.brownOutCount || 0) > 0 ? '<span class="brownout-count">⚡</span>' : ''}</p>
                     <span class="status status-${battery.status}">${battery.status.toUpperCase()}</span>
                     <div style="margin-top: 10px;">
                         <button class="btn btn-small" onclick="editBattery(${index})">Edit</button>
@@ -1895,8 +1895,8 @@
                 <tr>
                     <td>${h.match}</td>
                     <td>${h.battery}</td>
-                    <td>${h.beakVoltage ? h.beakVoltage + 'V' : (h.preVoltage || '-')}</td>
-                    <td>${h.beakCharge != null ? h.beakCharge + '%' : (h.postVoltage || '-')}</td>
+                    <td>${h.beakVoltage ? h.beakVoltage + 'V' : '-'}</td>
+                    <td>${h.beakCharge != null ? h.beakCharge + '%' : '-'}</td>
                     <td>${h.notes || '-'}</td>
                 </tr>
             `).join('');
@@ -2072,41 +2072,45 @@
             }
 
             // Generate schedule cycling through rotation batteries (most charged first)
+            const oldSchedule = appData.batterySchedule || [];
             appData.batterySchedule = [];
 
             // Add practice matches
             for (let i = 1; i <= numPracticeMatches; i++) {
                 const batteryIndex = (i - 1) % rotationBatteries.length;
+                const oldEntry = oldSchedule.find(s => s.matchNumber === i && s.type === 'practice');
                 appData.batterySchedule.push({
                     type: 'practice',
                     matchNumber: i,
                     batteryId: rotationBatteries[batteryIndex].id,
-                    completed: false,
-                    actualBatteryId: null
+                    completed: oldEntry?.completed || false,
+                    actualBatteryId: oldEntry?.completed ? oldEntry.actualBatteryId : null
                 });
             }
 
             // Add qualification matches
             for (let i = 1; i <= totalMatches; i++) {
                 const batteryIndex = (i - 1 + numPracticeMatches) % rotationBatteries.length;
+                const oldEntry = oldSchedule.find(s => s.matchNumber === i && s.type === 'qual');
                 appData.batterySchedule.push({
                     type: 'qual',
                     matchNumber: i,
                     batteryId: rotationBatteries[batteryIndex].id,
-                    completed: false,
-                    actualBatteryId: null
+                    completed: oldEntry?.completed || false,
+                    actualBatteryId: oldEntry?.completed ? oldEntry.actualBatteryId : null
                 });
             }
 
             // Add playoff matches
             for (let i = 1; i <= numPlayoffMatches; i++) {
                 const batteryIndex = (i - 1 + numPracticeMatches + totalMatches) % rotationBatteries.length;
+                const oldEntry = oldSchedule.find(s => s.matchNumber === i && s.type === 'playoff');
                 appData.batterySchedule.push({
                     type: 'playoff',
                     matchNumber: i,
                     batteryId: rotationBatteries[batteryIndex].id,
-                    completed: false,
-                    actualBatteryId: null
+                    completed: oldEntry?.completed || false,
+                    actualBatteryId: oldEntry?.completed ? oldEntry.actualBatteryId : null
                 });
             }
 
