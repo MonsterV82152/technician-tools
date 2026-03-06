@@ -1799,6 +1799,9 @@
                 scheduleEntry.completed = true;
             }
 
+            // Reconstruct remaining schedule so longest-charging batteries get priority
+            reshuffleRemainingSchedule();
+
             appData.stats.matchesCompleted++;
 
             // Auto increment match number
@@ -2278,6 +2281,9 @@
             const scheduleEntry = appData.batterySchedule?.find(s => s.matchNumber === editingScheduleMatch && s.type === editingScheduleMatchType);
 
             if (scheduleEntry && newBatteryId) {
+                // Reconstruct remaining schedule so longest-charging batteries get priority,
+                // then apply the manual override since reshuffleRemainingSchedule clears actualBatteryId
+                reshuffleRemainingSchedule();
                 scheduleEntry.actualBatteryId = newBatteryId;
                 saveData();
                 renderBatterySchedule();
